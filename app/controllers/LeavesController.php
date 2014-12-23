@@ -4,14 +4,27 @@ class LeavesController extends \BaseController
 {
 
     /**
-     * Display a listing of the resource.
-     * GET /leave
+     * Display a listing of the logged in user leaves.
+     * 
+     * GET /leave/show
      *
      * @return Response
      */
-    public function index()
+    public function show()
     {
-        //
+
+        if (Auth::check()) {
+            $userLeaves = User::whereHas('leaves', function($q) {
+                        $q->where('user_id', '=', Auth::user()->id);
+                    })->get();
+            $leaves = count($userLeaves) ? $userLeaves[0]->leaves : null;
+
+//            echo count($leaves); exit();
+            return View::make('leaves.show', array('leaves' => $leaves));
+        } else {
+
+            return Redirect::route('login')->withInput();
+        }
     }
 
     /**
@@ -55,7 +68,7 @@ class LeavesController extends \BaseController
         }
         $newLeave = Leave::create($data);
         if ($newLeave) {
-            return Redirect::route('leave_status', array('leave'=>$newLeave->id));
+            return Redirect::route('leave_status', array('leave' => $newLeave->id));
         }
 
         return Redirect::route('leave.create')->withInput();
